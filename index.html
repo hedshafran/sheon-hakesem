@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>שעון הקסם</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Varela+Round&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2c3550">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="שעון הקסם">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<style>
+  :root{
+    --hour:#ef5b4c; --minute:#2f9bb3; --sun:#ffcb45; --ink:#2c3550;
+    --cream:#fffaf2; --good:#3fb98b; --bad:#e0735f;
+    --shadow:0 18px 40px -18px rgba(44,53,80,.45);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:'Varela Round',sans-serif;color:var(--ink);
+    background:
+      radial-gradient(120% 80% at 80% -10%, #ffe6a8 0%, transparent 55%),
+      radial-gradient(120% 90% at 0% 110%, #cdeefb 0%, transparent 50%),
+      linear-gradient(165deg,#fdf3e3,#f4e8ff 90%);
+    min-height:100%;display:flex;justify-content:center;padding:14px;overflow-x:hidden;
+  }
+  .app{width:100%;max-width:440px;display:flex;flex-direction:column;gap:14px}
+  header{display:flex;align-items:center;justify-content:space-between;padding:4px 4px 0}
+  .logo{font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.5rem;letter-spacing:.5px}
+  .logo .dot{color:var(--hour)}
+  .stars{font-size:1.05rem;background:#fff;border-radius:30px;padding:6px 12px;box-shadow:var(--shadow);white-space:nowrap}
+  .card{background:var(--cream);border-radius:28px;box-shadow:var(--shadow);padding:20px 18px 22px;position:relative;overflow:hidden}
+
+  /* בית */
+  .home h1{font-family:'Fredoka',sans-serif;font-size:1.5rem;line-height:1.25;margin-bottom:4px}
+  .home p.sub{color:#7b8198;font-size:.95rem;margin-bottom:14px}
+  .section-title{font-family:'Fredoka';font-weight:600;font-size:1.05rem;margin:16px 4px 9px;color:#5a6178}
+  .section-title:first-of-type{margin-top:4px}
+  .levels{display:flex;flex-direction:column;gap:10px}
+  .lvl{display:flex;align-items:center;gap:13px;border:none;background:#fff;border-radius:18px;padding:13px 15px;cursor:pointer;text-align:right;box-shadow:0 6px 16px -10px rgba(44,53,80,.4);transition:transform .12s}
+  .lvl:active{transform:scale(.97)}
+  .lvl .badge{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-family:'Fredoka';font-weight:700;font-size:1.25rem;color:#fff;flex:none}
+  .lvl .ttl{font-weight:700;font-size:1.02rem}
+  .lvl .desc{color:#8a90a6;font-size:.83rem;margin-top:1px}
+
+  /* שעון */
+  .clockwrap{display:flex;justify-content:center;margin:6px 0 4px}
+  svg.clock{touch-action:none;user-select:none}
+  .grab{cursor:grab}
+  .dragging *{transition:none!important}
+
+  /* דיגיטלי */
+  .digi-panel{background:#16222e;border-radius:18px;padding:16px 22px;display:inline-flex;flex-direction:column;align-items:center;gap:4px;box-shadow:inset 0 2px 10px rgba(0,0,0,.4)}
+  .digi-wrap{display:flex;justify-content:center;margin:10px 0}
+  .digi-time{font-family:'Fredoka';font-weight:700;font-size:2.8rem;color:#74f7b0;letter-spacing:3px;direction:ltr;text-shadow:0 0 12px rgba(116,247,176,.55)}
+  .digi-panel.small .digi-time{font-size:1.8rem}
+  .cdot{animation:blink 1.1s steps(1) infinite}
+  @keyframes blink{50%{opacity:.25}}
+  .digi-part{color:#8fb0c7;font-size:.85rem;font-weight:700;direction:rtl}
+
+  /* בועת הסבר */
+  .speech{background:#fff;border-radius:20px;padding:14px 16px;font-size:1.0rem;line-height:1.55;box-shadow:0 6px 16px -12px rgba(44,53,80,.5);margin-bottom:8px}
+  .speech b{color:var(--hour)} .speech b.m{color:var(--minute)} .speech b.g{color:var(--good)}
+  .legend{display:flex;justify-content:center;gap:16px;margin-top:8px;flex-wrap:wrap}
+  .legend span{display:flex;align-items:center;gap:6px;font-size:.88rem;font-weight:700}
+  .legend i{width:24px;height:7px;border-radius:6px;display:inline-block}
+
+  /* שאלות */
+  .q{text-align:center;font-size:1.1rem;font-weight:700;margin:10px 0 2px}
+  .q small{display:block;color:#9aa0b4;font-weight:400;font-size:.82rem;margin-top:2px}
+  .options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .opt{border:2px solid #ece3d4;background:#fff;border-radius:16px;padding:14px 8px;font-family:'Varela Round';font-weight:700;font-size:1.05rem;cursor:pointer;transition:transform .1s,border-color .15s,background .15s;min-height:56px;display:flex;align-items:center;justify-content:center;text-align:center}
+  .opt.digit{font-family:'Fredoka';font-size:1.4rem;direction:ltr}
+  .opt:active{transform:scale(.96)}
+  .opt.right{border-color:var(--good);background:#eafaf3;color:var(--good)}
+  .opt.wrong{border-color:#f3b1a8;background:#fdeeec;opacity:.9}
+  .opt:disabled{cursor:default}
+  .opt.clockopt{padding:6px}
+
+  .row{display:flex;gap:10px;margin-top:16px}
+  .btn{flex:1;border:none;border-radius:18px;padding:15px;font-family:'Varela Round';font-weight:700;font-size:1.04rem;cursor:pointer;transition:transform .1s}
+  .btn:active{transform:scale(.97)}
+  .btn-primary{background:var(--ink);color:#fff}
+  .btn-ghost{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 2px #e7ddcc}
+  .btn-sun{background:var(--sun);color:#5a4500}
+  .back{background:none;border:none;font-family:'Varela Round';font-weight:700;color:#8a90a6;font-size:.95rem;cursor:pointer;padding:4px 2px}
+  .feedback{text-align:center;font-weight:700;min-height:24px;margin-top:12px;font-size:1.02rem;line-height:1.4}
+  .feedback.ok{color:var(--good)} .feedback.no{color:var(--bad)}
+  .progressbar{height:8px;background:#eee2d0;border-radius:10px;overflow:hidden;margin:2px 0 4px}
+  .progressbar i{display:block;height:100%;background:linear-gradient(90deg,var(--sun),var(--hour));width:0;transition:width .3s}
+  .hint-tap{text-align:center;color:#a59c8c;font-size:.82rem;margin-top:8px}
+  .toggle{display:flex;justify-content:center;gap:8px;margin:6px 0 2px}
+  .toggle button{border:2px solid #e7ddcc;background:#fff;border-radius:14px;padding:8px 16px;font-family:'Varela Round';font-weight:700;cursor:pointer;font-size:.95rem}
+  .toggle button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  /* חגיגה / סיכום */
+  .celebrate{text-align:center;padding:8px 4px}
+  .celebrate .big{font-size:3.5rem;animation:pop .5s ease}
+  .celebrate h2{font-family:'Fredoka';font-size:1.6rem;margin:8px 0 4px}
+  .celebrate p{color:#7b8198}
+  .scoreline{font-family:'Fredoka';font-size:1.3rem;color:var(--hour);margin:10px 0}
+  .review{text-align:right;background:#fff;border-radius:16px;padding:12px 14px;margin:10px 0;font-size:.92rem}
+  .review h3{font-size:.95rem;margin-bottom:6px;color:#5a6178}
+  .review div{padding:4px 0;border-bottom:1px solid #f1e8d8}
+  .review div:last-child{border:none}
+  .review b{color:var(--good)} .review s{color:var(--bad)}
+  @keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+  .confetti{position:fixed;top:-20px;width:11px;height:14px;border-radius:3px;z-index:50;pointer-events:none}
+  @keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.9}}
+  .install-bar{display:none;background:#fff;border-radius:18px;box-shadow:var(--shadow);padding:12px 14px;align-items:center;gap:12px}
+  .install-bar img{width:40px;height:40px;border-radius:11px;flex:none}
+  .install-bar .txt{font-size:.9rem;line-height:1.35;flex:1}
+  .install-bar .txt b{font-weight:700}
+  .install-bar button{border:none;background:var(--ink);color:#fff;border-radius:13px;padding:9px 14px;font-family:'Varela Round';font-weight:700;font-size:.9rem;cursor:pointer;flex:none}
+  .install-bar .x{background:none;color:#b3b3b3;font-size:1.2rem;padding:4px 6px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}.confetti{display:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">שעון הקסם<span class="dot">.</span></div>
+    <div class="stars">⭐ <span id="starcount">0</span></div>
+  </header>
+  <div class="install-bar" id="installbar"></div>
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+/* =========================================================
+   נתונים בסיסיים
+========================================================= */
+const HEB_H = ['','אחת','שתיים','שלוש','ארבע','חמש','שש','שבע','שמונה','תשע','עשר','אחת־עשרה','שתים־עשרה'];
+const HEB_MIN = {5:'חמישה',10:'עשרה',20:'עשרים',25:'עשרים וחמישה'};
+const STEPS = [0,5,10,15,20,25,30,35,40,45,50,55];
+let stars=0;
+const card=document.getElementById('card');
+const starcount=document.getElementById('starcount');
+function addStar(){stars++;starcount.textContent=stars;}
+
+/* זמן במילים (12 שעות, עברית מדוברת) */
+function hebTime(h,m){
+  const H=HEB_H[h], next=HEB_H[h%12+1];
+  if(m===0)  return H;
+  if(m===15) return `${H} ורבע`;
+  if(m===30) return `${H} וחצי`;
+  if(m===45) return `רבע ל${next}`;
+  if(m===40) return `עשרים ל${next}`;
+  if(m===50) return `עשרה ל${next}`;
+  if(m===55) return `חמישה ל${next}`;
+  if(m===35) return `עשרים וחמישה ל${next}`;
+  if(m<30)   return `${H} ו${HEB_MIN[m]||m}`;
+  return `${H} ו־${m} דקות`;
+}
+/* חלק של היום מתוך שעה ב-24 */
+function partOf(h24){
+  if(h24<5)  return 'בלילה';
+  if(h24<12) return 'בבוקר';
+  if(h24<13) return 'בצהריים';
+  if(h24<18) return 'אחר הצהריים';
+  if(h24<22) return 'בערב';
+  return 'בלילה';
+}
+function phrase24(h24,m){
+  const h12=(h24%12)===0?12:h24%12;
+  return hebTime(h12,m)+' '+partOf(h24);
+}
+
+/* =========================================================
+   שעון אנלוגי — SVG עם זוויות אפויות
+========================================================= */
+function clockSVG(h,m,o={}){
+  const size=o.size||300, allNums=o.allNums!==false, grab=o.grab, id=o.id||'c';
+  const hourA=((h%12)+m/60)*30, minA=m*6;
+  let ticks='',nums='';
+  for(let i=0;i<60;i++){
+    const a=i*6*Math.PI/180, big=(i%5===0);
+    const r1=big?78:82,r2=88;
+    ticks+=`<line x1="${100+r1*Math.sin(a)}" y1="${100-r1*Math.cos(a)}" x2="${100+r2*Math.sin(a)}" y2="${100-r2*Math.cos(a)}" stroke="${big?'#c9bca6':'#e4dac6'}" stroke-width="${big?3:1.5}" stroke-linecap="round"/>`;
+  }
+  const shown = allNums?[1,2,3,4,5,6,7,8,9,10,11,12]:[12,3,6,9];
+  shown.forEach(n=>{
+    const a=n*30*Math.PI/180,r=65;
+    nums+=`<text x="${100+r*Math.sin(a)}" y="${100-r*Math.cos(a)}" text-anchor="middle" dominant-baseline="central" font-family="Fredoka,sans-serif" font-weight="600" font-size="${allNums?15:16}" fill="#2c3550">${n}</text>`;
+  });
+  return `<svg class="clock" width="${size}" height="${size}" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" id="${id}-svg">
+    <circle cx="100" cy="100" r="95" fill="#f3e7d2"/>
+    <circle cx="100" cy="100" r="90" fill="#fff" stroke="#efe3cd" stroke-width="2"/>
+    ${ticks}${nums}
+    <g id="${id}-hour" class="hand ${grab?'grab':''}" transform="rotate(${hourA} 100 100)">
+      <line x1="100" y1="108" x2="100" y2="56" stroke="var(--hour)" stroke-width="8" stroke-linecap="round"/></g>
+    <g id="${id}-min" class="hand ${grab?'grab':''}" transform="rotate(${minA} 100 100)">
+      <line x1="100" y1="112" x2="100" y2="30" stroke="var(--minute)" stroke-width="5.5" stroke-linecap="round"/></g>
+    <circle cx="100" cy="100" r="7" fill="#2c3550"/><circle cx="100" cy="100" r="3" fill="#fff"/>
+  </svg>`;
+}
+function setHands(id,h,m){
+  const hourA=((h%12)+m/60)*30, minA=m*6;
+  document.getElementById(id+'-hour').setAttribute('transform',`rotate(${hourA} 100 100)`);
+  document.getElementById(id+'-min').setAttribute('transform',`rotate(${minA} 100 100)`);
+}
+
+/* פאנל דיגיטלי */
+function digiPanel(h,m,o={}){
+  const hh=o.h24?String(h).padStart(2,'0'):h;
+  return `<div class="digi-wrap"><div class="digi-panel ${o.small?'small':''}">
+    <div class="digi-time">${hh}<span class="cdot">:</span>${String(m).padStart(2,'0')}</div>
+    ${o.part?`<div class="digi-part">${o.part}</div>`:''}
+  </div></div>`;
+}
+
+/* =========================================================
+   תפריט
+========================================================= */
+const MENU=[
+ {section:'שעון מחוגים 🕐', items:[
+   {id:'intro', icon:'👋', color:'#7c6cf0', title:'מכירים את השעון', desc:'סובבי את המחוגים בעצמך'},
+   {id:'a1', icon:'1', color:'#ef5b4c', title:'שעות עגולות', desc:'3:00, 7:00...', level:1},
+   {id:'a2', icon:'½', color:'#2f9bb3', title:'חצי שעה', desc:'"שלוש וחצי"', level:2},
+   {id:'a3', icon:'¼', color:'#3fb98b', title:'רבע ל / רבע אחרי', desc:'4:15, 4:45', level:3},
+   {id:'a4', icon:'5', color:'#f29b3c', title:'כל 5 דקות', desc:'קריאה מדויקת', level:4},
+ ]},
+ {section:'שעון דיגיטלי 🔢', items:[
+   {id:'dintro', icon:'📟', color:'#5566d6', title:'מכירים את הדיגיטלי', desc:'שעות : דקות'},
+   {id:'d24', icon:'🌗', color:'#8a5cd1', title:'שעון 24 שעות', desc:'14:00 = שתיים בצהריים'},
+   {id:'dquiz', icon:'✍️', color:'#2f9bb3', title:'תרגול דיגיטלי', desc:'קראי ובחרי במילים'},
+ ]},
+ {section:'אתגר גדול 🚀', items:[
+   {id:'convert', icon:'🔁', color:'#e0598b', title:'מחוגים ⇄ דיגיטלי', desc:'התאימי בין השניים'},
+   {id:'test', icon:'🎓', color:'#2c3550', title:'מצב מבחן', desc:'10 שאלות, תשובות במילים'},
+ ]},
+];
+function renderHome(){
+  card.className='card home';
+  let html=`<h1>בואי נלמד לקרוא שעון! 🕒</h1>
+    <p class="sub">שעון מחוגים ושעון דיגיטלי. אפשר להתחיל מההתחלה ולעלות שלב־שלב.</p>`;
+  MENU.forEach(sec=>{
+    html+=`<div class="section-title">${sec.section}</div><div class="levels">`;
+    sec.items.forEach(it=>{
+      html+=`<button class="lvl" onclick="go('${it.id}')">
+        <span class="badge" style="background:${it.color}">${it.icon}</span>
+        <span><span class="ttl">${it.title}</span><span class="desc">${it.desc}</span></span></button>`;
+    });
+    html+=`</div>`;
+  });
+  card.innerHTML=html;
+}
+function go(id){
+  if(id==='intro') return renderIntro();
+  if(id[0]==='a')  return renderAnalogQuiz(+id[1]);
+  if(id==='dintro')return renderDigitalIntro();
+  if(id==='d24')   return render24();
+  if(id==='dquiz') return renderDigitalQuiz();
+  if(id==='convert')return renderConvert();
+  if(id==='test')  return renderTest();
+}
+
+/* =========================================================
+   היכרות עם המחוגים — חקירה חופשית
+========================================================= */
+function renderIntro(){
+  card.className='card';
+  card.innerHTML=`
+    <button class="back" onclick="renderHome()">→ תפריט</button>
+    <div class="speech">לשעון יש שני מחוגים. <b>המחוג הקצר והאדום</b> מראה את <b>השעה</b>.
+      <b class="m">המחוג הארוך והכחול</b> מראה את <b class="m">הדקות</b>. גררי כל מחוג באצבע 👇</div>
+    <div class="clockwrap">${clockSVG(3,0,{id:'m',grab:true})}</div>
+    <div class="digi-wrap"><div class="digi-panel small"><div class="digi-time" id="dig" style="font-size:1.7rem">3<span class="cdot">:</span>00</div></div></div>
+    <div class="legend">
+      <span><i style="background:var(--hour)"></i>שעות (קצר)</span>
+      <span><i style="background:var(--minute)"></i>דקות (ארוך)</span></div>
+    <div class="hint-tap">המחוג הכחול קופץ כל 5 דקות, כמו המספרים על השעון</div>
+    <div class="row"><button class="btn btn-primary" onclick="renderAnalogQuiz(1)">אני מוכנה לתרגל! ←</button></div>`;
+  let h=3,m=0;
+  enableDrag('m',(nh,nm)=>{h=nh;m=nm;document.getElementById('dig').innerHTML=`${h}<span class="cdot">:</span>${String(m).padStart(2,'0')}`;});
+}
+function enableDrag(id,onChange){
+  const svg=document.getElementById(id+'-svg'); let active=null,h=3,m=0;
+  function ang(e){const r=svg.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;const p=e.touches?e.touches[0]:e;let d=Math.atan2(p.clientX-cx,-(p.clientY-cy))*180/Math.PI;return d<0?d+360:d;}
+  function start(hand){return e=>{active=hand;document.body.classList.add('dragging');e.preventDefault();};}
+  function move(e){if(!active)return;const d=ang(e);if(active==='min'){m=(Math.round(d/30)*5)%60;}else{h=Math.round(d/30)%12||12;}setHands(id,h,m);onChange(h,m);e.preventDefault();}
+  function end(){active=null;document.body.classList.remove('dragging');}
+  document.getElementById(id+'-hour').addEventListener('pointerdown',start('hour'));
+  document.getElementById(id+'-min').addEventListener('pointerdown',start('min'));
+  window.addEventListener('pointermove',move,{passive:false});
+  window.addEventListener('pointerup',end);
+}
+
+/* =========================================================
+   תרגול אנלוגי — מראה שעון, בוחרים תשובה
+========================================================= */
+const QN=6;
+function randTime(level){
+  let h=1+Math.floor(Math.random()*12),m;
+  if(level===1)m=0;
+  else if(level===2)m=Math.random()<.5?0:30;
+  else if(level===3)m=[0,15,30,45][Math.floor(Math.random()*4)];
+  else m=STEPS[Math.floor(Math.random()*STEPS.length)];
+  return {h,m};
+}
+function key(h,m){return h+'_'+m;}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function buildOpts(correct,level){
+  const set=new Set([key(correct.h,correct.m)]),opts=[correct];let g=0;
+  const mPool=level<=2?[0,30]:level===3?[0,15,30,45]:STEPS;
+  while(opts.length<4&&g++<80){
+    let nh=correct.h,nm=correct.m,r=Math.random();
+    if(r<.45)nh=(correct.h-1+(Math.random()<.5?1:11))%12+1;
+    else if(r<.8){let p=mPool[Math.floor(Math.random()*mPool.length)];nm=p;}
+    else {nh=(correct.h-1+1+Math.floor(Math.random()*11))%12+1;nm=mPool[Math.floor(Math.random()*mPool.length)];}
+    if(!set.has(key(nh,nm))){set.add(key(nh,nm));opts.push({h:nh,m:nm});}
+  }
+  while(opts.length<4){const nh=1+Math.floor(Math.random()*12);if(!set.has(key(nh,correct.m))){set.add(key(nh,correct.m));opts.push({h:nh,m:correct.m});}}
+  return shuffle(opts);
+}
+let qs=null;
+function renderAnalogQuiz(level){
+  qs={level,idx:0,correct:0,mode:'analog'};
+  nextAnalog();
+}
+function nextAnalog(){
+  const c=randTime(qs.level),opts=buildOpts(c,qs.level);
+  qs.cur={c,opts};
+  card.className='card';
+  card.innerHTML=`
+    <button class="back" onclick="renderHome()">→ תפריט</button>
+    <div class="progressbar"><i style="width:${qs.idx/QN*100}%"></i></div>
+    <div class="q">איזו שעה השעון מראה?</div>
+    <div class="clockwrap">${clockSVG(c.h,c.m,{size:260,id:'q'})}</div>
+    <div class="options" id="opts">
+      ${opts.map(o=>`<button class="opt" onclick="ansAnalog(this,'${key(o.h,o.m)}')">
+        <span style="display:flex;flex-direction:column"><span class="" style="font-family:Fredoka;font-size:1.2rem;direction:ltr">${o.h}:${String(o.m).padStart(2,'0')}</span>
+        <span style="font-size:.82rem;color:#9aa0b4">${hebTime(o.h,o.m)}</span></span></button>`).join('')}
+    </div><div class="feedback" id="fb"></div>`;
+}
+function ansAnalog(btn,k){
+  const fb=document.getElementById('fb'),btns=[...document.querySelectorAll('.opt')];
+  btns.forEach(b=>b.disabled=true);
+  const ck=key(qs.cur.c.h,qs.cur.c.m);
+  if(k===ck){btn.classList.add('right');qs.correct++;addStar();fb.className='feedback ok';fb.textContent=cheer();setTimeout(()=>advance(nextAnalog),900);}
+  else{btn.classList.add('wrong');btns.find(b=>b.getAttribute('onclick').includes("'"+ck+"'")).classList.add('right');
+    fb.className='feedback no';fb.innerHTML=`כמעט! המחוג הקצר ליד ${qs.cur.c.h}, אז זו השעה ${hebTime(qs.cur.c.h,qs.cur.c.m)}.`;
+    const r=document.createElement('div');r.className='row';r.innerHTML=`<button class="btn btn-primary" onclick="advance(nextAnalog)">הבא ←</button>`;card.appendChild(r);}
+}
+function advance(fn){qs.idx++;if(qs.idx>=QN)renderResult(qs);else fn();}
+function cheer(){return ['יופי! 🎉','מצוין! 🌟','כל הכבוד! 👏','נכון! ✨','איזה כיף! 🥳'][Math.floor(Math.random()*5)];}
+
+/* =========================================================
+   שעון דיגיטלי — שיעור
+========================================================= */
+function renderDigitalIntro(){
+  card.className='card';
+  card.innerHTML=`
+    <button class="back" onclick="renderHome()">→ תפריט</button>
+    <div class="speech">בשעון דיגיטלי אין מחוגים — רק מספרים.
+      המספר <b>לפני</b> הנקודתיים הוא ה<b>שעה</b>, והמספר <b class="m">אחרי</b> הנקודתיים הוא ה<b class="m">דקות</b>.</div>
+    ${digiPanel(7,25,{})}
+    <div class="speech" style="margin-top:8px">למשל כאן: <b>7</b> מצד שמאל = השעה שבע, <b class="m">25</b> מצד ימין = עשרים וחמש דקות.
+      קוראים את זה: <b class="g">"שבע ועשרים וחמש"</b>.</div>
+    <div class="hint-tap">טיפ: הדקות תמיד בין 00 ל-59. אחרי 59 מתחילה שעה חדשה!</div>
+    <div class="row"><button class="btn btn-primary" onclick="renderDigitalQuiz()">לתרגול ←</button></div>`;
+}
+function render24(){
+  card.className='card';
+  let h12=true;
+  card.innerHTML=`
+    <button class="back" onclick="renderHome()">→ תפריט</button>
+    <div class="speech">היום יש 24 שעות. עד הצהריים סופרים 1–12, ואז ממשיכים:
+      אחרי 12 בצהריים בא <b>13</b>, אחר כך <b>14</b>... עד <b>23</b>, וחצות זה <b>00</b>.</div>
+    <div class="toggle"><button id="t12" class="on" onclick="set24(false)">רגיל</button><button id="t24" onclick="set24(true)">24 שעות</button></div>
+    <div id="panel"></div>
+    <div class="speech" id="exp"></div>
+    <div class="hint-tap">לחצי על הכפתורים כדי לראות את אותה שעה בשתי הצורות</div>
+    <div class="row"><button class="btn btn-primary" onclick="renderConvert()">לאתגר ההמרה ←</button></div>`;
+  window.set24=(is24)=>{
+    document.getElementById('t12').classList.toggle('on',!is24);
+    document.getElementById('t24').classList.toggle('on',is24);
+    document.getElementById('panel').innerHTML=is24?digiPanel(15,30,{h24:true}):digiPanel(3,30,{part:'אחר הצהריים'});
+    document.getElementById('exp').innerHTML=is24
+      ? `בשעון 24 שעות כתוב <b>15:30</b>. כדי לדעת בשפה רגילה מורידים 12: ‎15‎−‎12‎=‎3‎, אז זו <b class="g">שלוש וחצי אחר הצהריים</b>.`
+      : `זו <b class="g">שלוש וחצי אחר הצהריים</b>. בשעון 24 שעות זה ייכתב 15:30 (3+12).`;
+  };
+  set24(false);
+}
+
+/* תרגול דיגיטלי — מראה דיגיטלי, בוחרים מילים */
+function textOpts(c){ // c={h,m}; אפשרויות במילים
+  const set=new Set([hebTime(c.h,c.m)]),opts=[{t:hebTime(c.h,c.m),ok:true}];let g=0;
+  while(opts.length<4&&g++<80){
+    let nh=c.h,nm=c.m,r=Math.random();
+    if(r<.4)nh=(c.h-1+(Math.random()<.5?1:11))%12+1;
+    else if(r<.75)nm=STEPS[Math.floor(Math.random()*STEPS.length)];
+    else{nh=(c.h+Math.floor(Math.random()*11)+1-1)%12+1;nm=STEPS[Math.floor(Math.random()*STEPS.length)];}
+    const t=hebTime(nh,nm);
+    if(!set.has(t)){set.add(t);opts.push({t,ok:false});}
+  }
+  return shuffle(opts);
+}
+function renderDigitalQuiz(){qs={idx:0,correct:0};nextDigital();}
+function nextDigital(){
+  const c={h:1+Math.floor(Math.random()*12),m:STEPS[Math.floor(Math.random()*STEPS.length)]};
+  qs.cur=c;const opts=textOpts(c);
+  card.className='card';
+  card.innerHTML=`
+    <button class="back" onclick="renderHome()">→ תפריט</button>
+    <div class="progressbar"><i style="width:${qs.idx/QN*100}%"></i></div>
+    <div class="q">איך אומרים את השעה הזאת?</div>
+    ${digiPanel(c.h,c.m,{})}
+    <div class="options">
+      ${opts.map(o=>`<button class="opt" onclick="ansText(this,${o.ok},nextDigital)">${o.t}</button>`).join('')}
+    </div><div class="feedback" id="fb"></div>`;
+}
+function ansText(btn,ok,fn){
+  const fb=document.getElementById('fb'),btns=[...document.querySelectorAll('.opt')];
+  btns.forEach(b=>b.disabled=true);
+  if(ok){btn.classList.add('right');qs.correct++;addStar();fb.className='feedback ok';fb.textContent=cheer();setTimeout(()=>advance(fn),900);}
+  else{btn.classList.add('wrong');btns.forEach(b=>{if(b.getAttribute('onclick').includes('true'))b.classList.add('right');});
+    fb.className='feedback no';fb.textContent='לא בדיוק — התשובה הנכונה מסומנת בירוק.';
+    const r=document.createElement('div');r.className='row';r.innerHTML=`<button class="btn btn-primary" onclick="advance(${fn.name})">הבא ←</button>`;card.appendChild(r);}
+}
+
+/* =========================================================
+   המרה: מחוגים ⇄ דיגיטלי
+========================================================= */
+function renderConvert(){qs={idx:0,correct:0};nextConvert();}
+function nextConvert(){
+  const c={h:1+Math.floor(Math.random()*12),m:STEPS[Math.floor(Math.random()*STEPS.length)]};
+  qs.cur=c;
+  const dir=Math.random()<.5?'a2d':'d2a';
+  card.className='card';
+  if(dir==='a2d'){ // מראה מחוגים, בוחרים דיגיטלי בטקסט
+    const opts=buildOpts(c,4);
+    card.innerHTML=`
+      <button class="back" onclick="renderHome()">→ תפריט</button>
+      <div class="progressbar"><i style="width:${qs.idx/QN*100}%"></i></div>
+      <div class="q">בשעון דיגיטלי — איך זה ייכתב?</div>
+      <div class="clockwrap">${clockSVG(c.h,c.m,{size:240,id:'q'})}</div>
+      <div class="options">
+        ${opts.map(o=>`<button class="opt digit" onclick="ansText(this,${o.h===c.h&&o.m===c.m},nextConvert)">${o.h}:${String(o.m).padStart(2,'0')}</button>`).join('')}
+      </div><div class="feedback" id="fb"></div>`;
+  } else { // מראה דיגיטלי, בוחרים שעון מחוגים נכון
+    const opts=buildOpts(c,4);
+    card.innerHTML=`
+      <button class="back" onclick="renderHome()">→ תפריט</button>
+      <div class="progressbar"><i style="width:${qs.idx/QN*100}%"></i></div>
+      <div class="q">איזה שעון מראה את הזמן הזה?</div>
+      ${digiPanel(c.h,c.m,{})}
+      <div class="options">
+        ${opts.map((o,i)=>`<button class="opt clockopt" onclick="ansText(this,${o.h===c.h&&o.m===c.m},nextConvert)">${clockSVG(o.h,o.m,{size:110,allNums:false,id:'o'+i})}</button>`).join('')}
+      </div><div class="feedback" id="fb"></div>`;
+  }
+}
+
+/* =========================================================
+   מצב מבחן — 10 שאלות, תשובות במילים, סיכום + טעויות
+========================================================= */
+const TESTN=10;
+function renderTest(){qs={idx:0,correct:0,wrong:[]};nextTest();}
+function nextTest(){
+  const type=Math.random(); // אנלוגי / דיגיטלי 12 / דיגיטלי 24
+  card.className='card';
+  let head=`<button class="back" onclick="renderHome()">→ תפריט</button>
+    <div class="progressbar"><i style="width:${qs.idx/TESTN*100}%"></i></div>
+    <div class="q">מבחן · שאלה ${qs.idx+1} מתוך ${TESTN}<small>בחרי את התשובה הנכונה במילים</small></div>`;
+  if(type<0.4){ // אנלוגי -> מילים
+    const c={h:1+Math.floor(Math.random()*12),m:STEPS[Math.floor(Math.random()*STEPS.length)]};
+    qs.cur={correctText:hebTime(c.h,c.m)};
+    const opts=textOpts(c);
+    card.innerHTML=head+`<div class="clockwrap">${clockSVG(c.h,c.m,{size:230,id:'q'})}</div>
+      <div class="options">${opts.map(o=>`<button class="opt" onclick="ansTest(this,${o.ok},'${o.t}')">${o.t}</button>`).join('')}</div>
+      <div class="feedback" id="fb"></div>`;
+  } else if(type<0.75){ // דיגיטלי 12 -> מילים
+    const c={h:1+Math.floor(Math.random()*12),m:STEPS[Math.floor(Math.random()*STEPS.length)]};
+    qs.cur={correctText:hebTime(c.h,c.m)};
+    const opts=textOpts(c);
+    card.innerHTML=head+digiPanel(c.h,c.m,{})+
+      `<div class="options">${opts.map(o=>`<button class="opt" onclick="ansTest(this,${o.ok},'${o.t}')">${o.t}</button>`).join('')}</div>
+      <div class="feedback" id="fb"></div>`;
+  } else { // דיגיטלי 24 -> מילים עם חלק היום
+    const h24=13+Math.floor(Math.random()*10); // 13..22
+    const m=STEPS[Math.floor(Math.random()*STEPS.length)];
+    const correct=phrase24(h24,m);
+    qs.cur={correctText:correct};
+    const set=new Set([correct]),opts=[{t:correct,ok:true}];let g=0;
+    while(opts.length<4&&g++<60){
+      let nh=h24+(Math.floor(Math.random()*5)-2),nm=m;
+      if(Math.random()<.5)nm=STEPS[Math.floor(Math.random()*STEPS.length)];
+      if(nh<13)nh+=12;if(nh>23)nh-=11;
+      const t=phrase24(nh,nm);
+      if(!set.has(t)){set.add(t);opts.push({t,ok:false});}
+    }
+    shuffle(opts);
+    card.innerHTML=head+digiPanel(h24,m,{h24:true})+
+      `<div class="q" style="font-size:.95rem;margin-top:4px">(שעון 24 שעות)</div>
+      <div class="options">${opts.map(o=>`<button class="opt" onclick="ansTest(this,${o.ok},'${o.t}')">${o.t}</button>`).join('')}</div>
+      <div class="feedback" id="fb"></div>`;
+  }
+}
+function ansTest(btn,ok,chosen){
+  const fb=document.getElementById('fb'),btns=[...document.querySelectorAll('.opt')];
+  btns.forEach(b=>b.disabled=true);
+  if(ok){btn.classList.add('right');qs.correct++;addStar();fb.className='feedback ok';fb.textContent=cheer();}
+  else{btn.classList.add('wrong');btns.forEach(b=>{if(b.textContent===qs.cur.correctText)b.classList.add('right');});
+    fb.className='feedback no';fb.textContent='התשובה הנכונה מסומנת בירוק.';
+    qs.wrong.push({chosen,correct:qs.cur.correctText});}
+  const r=document.createElement('div');r.className='row';
+  r.innerHTML=`<button class="btn btn-primary" onclick="${qs.idx+1>=TESTN?'renderTestResult()':'qs.idx++;nextTest()'}">${qs.idx+1>=TESTN?'לתוצאות 🎓':'הבאה ←'}</button>`;
+  card.appendChild(r);
+}
+function renderTestResult(){
+  const perfect=qs.correct===TESTN,emoji=perfect?'🏆':qs.correct>=7?'🌟':'💪';
+  let review='';
+  if(qs.wrong.length){
+    review=`<div class="review"><h3>כדאי לחזור על אלה:</h3>${qs.wrong.map(w=>`<div><b>${w.correct}</b> &nbsp;<s>${w.chosen}</s></div>`).join('')}</div>`;
+  }
+  card.className='card';
+  card.innerHTML=`<div class="celebrate"><div class="big">${emoji}</div>
+    <h2>${perfect?'מבחן מושלם!':qs.correct>=7?'כל הכבוד!':'יפה, ממשיכים להתאמן!'}</h2>
+    <div class="scoreline">${qs.correct} מתוך ${TESTN} נכון</div></div>
+    ${review}
+    <div class="row"><button class="btn btn-ghost" onclick="renderTest()">מבחן חדש</button>
+    <button class="btn btn-sun" onclick="renderHome()">לתפריט 🏠</button></div>`;
+  if(perfect)confetti();
+}
+
+/* =========================================================
+   תוצאה כללית (לתרגולים של 6 שאלות)
+========================================================= */
+function renderResult(s){
+  const perfect=s.correct===QN,emoji=perfect?'🏆':s.correct>=4?'🌟':'💪';
+  const next=s.mode==='analog'&&s.level<4;
+  card.className='card';
+  card.innerHTML=`<div class="celebrate"><div class="big">${emoji}</div>
+    <h2>${perfect?'מושלם!':s.correct>=4?'כל הכבוד!':'יפה מאוד!'}</h2>
+    <div class="scoreline">${s.correct} מתוך ${QN} נכון</div>
+    <div class="row">
+      <button class="btn btn-ghost" onclick="${s.mode==='analog'?`renderAnalogQuiz(${s.level})`:'renderDigitalQuiz()'}">עוד פעם</button>
+      ${next?`<button class="btn btn-sun" onclick="renderAnalogQuiz(${s.level+1})">השלב הבא ←</button>`:`<button class="btn btn-sun" onclick="renderHome()">לתפריט 🏠</button>`}
+    </div></div>`;
+  if(perfect)confetti();
+}
+function confetti(){
+  const cols=['#ef5b4c','#2f9bb3','#ffcb45','#3fb98b','#7c6cf0','#e0598b'];
+  for(let i=0;i<70;i++){const c=document.createElement('div');c.className='confetti';
+    c.style.left=Math.random()*100+'vw';c.style.background=cols[i%cols.length];
+    c.style.animation=`fall ${1.4+Math.random()*1.6}s linear ${Math.random()*.5}s forwards`;
+    document.body.appendChild(c);setTimeout(()=>c.remove(),3600);}
+}
+
+/* =========================================================
+   התקנה למסך הבית (PWA)
+========================================================= */
+(function(){
+  const bar=document.getElementById('installbar');
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;
+  if(standalone) return; // כבר מותקן — לא מציגים כלום
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  let deferred=null;
+  function showAndroid(){
+    bar.innerHTML=`<img src="icon-192.png" alt=""><div class="txt"><b>להוסיף את שעון הקסם למסך הבית?</b><br>נפתח כמו אפליקציה, גם בלי אינטרנט.</div>
+      <button id="instbtn">התקנה</button><button class="x" id="instx">✕</button>`;
+    bar.style.display='flex';
+    document.getElementById('instbtn').onclick=async()=>{if(!deferred)return;deferred.prompt();await deferred.userChoice;deferred=null;bar.style.display='none';};
+    document.getElementById('instx').onclick=()=>bar.style.display='none';
+  }
+  function showIOS(){
+    bar.innerHTML=`<img src="icon-192.png" alt=""><div class="txt"><b>להוספה למסך הבית:</b><br>הקישו על <b>שיתוף</b> ⬆️ בתחתית הדפדפן, ואז על <b>"הוספה למסך הבית"</b>.</div>
+      <button class="x" id="instx">✕</button>`;
+    bar.style.display='flex';
+    document.getElementById('instx').onclick=()=>bar.style.display='none';
+  }
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;showAndroid();});
+  if(isIOS) showIOS();
+})();
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+
+renderHome();
+</script>
+</body>
+</html>
