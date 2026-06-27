@@ -22,14 +22,16 @@
     --shadow:0 18px 40px -18px rgba(44,53,80,.45);
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  html,body{height:100%}
+  html{height:auto}
   body{
     font-family:'Varela Round',sans-serif;color:var(--ink);
     background:
       radial-gradient(120% 80% at 80% -10%, #ffe6a8 0%, transparent 55%),
       radial-gradient(120% 90% at 0% 110%, #cdeefb 0%, transparent 50%),
       linear-gradient(165deg,#fdf3e3,#f4e8ff 90%);
-    min-height:100%;display:flex;justify-content:center;padding:14px;overflow-x:hidden;
+    background-attachment:fixed;
+    min-height:100dvh;display:flex;justify-content:center;align-items:flex-start;
+    padding:14px;overflow-x:hidden;-webkit-overflow-scrolling:touch;
   }
   .app{width:100%;max-width:440px;display:flex;flex-direction:column;gap:14px}
   header{display:flex;align-items:center;justify-content:space-between;padding:4px 4px 0}
